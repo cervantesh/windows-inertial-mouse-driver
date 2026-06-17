@@ -1,0 +1,79 @@
+; inertialmouse.inf
+;
+; HID mouse upper-filter package for the inertial mouse driver.
+
+[Version]
+Signature="$WINDOWS NT$"
+Provider=%ProviderName%
+Class=Mouse
+ClassGuid={4D36E96F-E325-11CE-BFC1-08002BE10318}
+DriverVer=06/16/2026,1.0.0.0
+CatalogFile=inertialmouse.cat
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%ManufacturerName% = Standard,NTamd64
+
+[Standard.NTamd64]
+%DeviceDesc% = InertialMouse_Install, %MouseHardwareId%
+
+[InertialMouse_Install.NT]
+Include=msmouse.inf
+Needs=HID_Mouse_Inst
+CopyFiles=InertialMouse_CopyFiles
+
+[InertialMouse_CopyFiles]
+inertialmouse.sys
+
+[InertialMouse_Install.NT.Services]
+Include=msmouse.inf
+Needs=HID_Mouse_Inst.Services
+AddService=inertialmouse,,InertialMouse_Service
+
+[InertialMouse_Service]
+DisplayName=%ServiceDesc%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%12%\inertialmouse.sys
+
+[InertialMouse_Install.NT.HW]
+Include=msmouse.inf
+Needs=HID_Mouse_Inst.HW
+AddReg=InertialMouse_HW_AddReg
+
+[InertialMouse_HW_AddReg]
+HKR,,"UpperFilters",0x00010008,"inertialmouse"
+HKR,"Device Parameters","InertialEnabled",0x00010001,1
+HKR,"Device Parameters","TimerPeriodMs",0x00010001,8
+HKR,"Device Parameters","AccelXQ8",0x00010001,256
+HKR,"Device Parameters","AccelYQ8",0x00010001,256
+HKR,"Device Parameters","FrictionXQ8",0x00010001,20
+HKR,"Device Parameters","FrictionYQ8",0x00010001,20
+HKR,"Device Parameters","MaxVelocityXQ8",0x00010001,10240
+HKR,"Device Parameters","MaxVelocityYQ8",0x00010001,10240
+
+[SourceDisksNames]
+1 = %DiskName%,,,
+
+[SourceDisksFiles]
+inertialmouse.sys = 1
+
+[InertialMouse_Install.NT.Wdf]
+KmdfService=inertialmouse,InertialMouse_Wdf
+
+[InertialMouse_Wdf]
+KmdfLibraryVersion=1.33
+
+[Strings]
+ProviderName="CervantesH"
+ManufacturerName="CervantesH"
+DeviceDesc="Inertial Mouse Filter"
+ServiceDesc="Inertial Mouse Filter Driver"
+DiskName="Inertial Mouse Filter Install Disk"
+
+; Replace with the target mouse Hardware ID from Device Manager.
+MouseHardwareId="HID\VID_0461&PID_4D22&REV_0200"

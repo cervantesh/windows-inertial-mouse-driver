@@ -1,0 +1,34 @@
+_extracted/
+.dotnet10/
+
+# Legacy/local reference material not published in the clean repository
+*.docx
+*.pptx
+*.zip
+
+# Visual Studio / WDK build output
+.vs/
+Debug/
+Release/
+x64/
+Win32/
+*.sdf
+*.VC.db
+*.user
+*.obj
+*.pdb
+*.ilk
+*.log
+*.tlog
+*.sys
+*.cat
+*.cer
+
+# .NET installer build output
+dist/
+docs/page-*-check.png
+src/installer/Payload/
+src/installer/bin/
+src/installer/obj/
+src/installer/publish/
+src/bootstrapper/build/

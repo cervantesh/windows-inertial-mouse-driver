@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Windows Inertial Mouse Driver</title>
+  <meta name="description" content="Portfolio presentation for a Windows KMDF HID mouse filter driver with inertial cursor motion and a single-file installer.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="paper">
+    <header class="paper-header">
+      <div class="edition-line" aria-label="edition metadata">
+        <span>Repository Edition</span>
+        <span>June 17, 2026</span>
+      </div>
+      <div class="masthead-note">Windows Driver Implementation Review</div>
+      <h1>Windows Inertial Mouse Driver</h1>
+      <p class="paper-subtitle">
+        Repository-structured presentation of a KMDF HID mouse filter driver
+        that converts physical mouse movement into acceleration, velocity, and
+        friction-based cursor slowdown.
+      </p>
+      <div class="byline-row">
+        <p class="byline">Technical summary of implementation, packaging, and review entry points.</p>
+        <p class="publication-note">GitHub Pages publication for portfolio review.</p>
+      </div>
+      <dl class="header-meta">
+        <div>
+          <dt>Repository</dt>
+          <dd><a href="https://github.com/cervantesh/windows-inertial-mouse-driver">windows-inertial-mouse-driver</a></dd>
+        </div>
+        <div>
+          <dt>Driver source</dt>
+          <dd><a href="https://github.com/cervantesh/windows-inertial-mouse-driver/tree/main/src/inertialmouse">src/inertialmouse</a></dd>
+        </div>
+        <div>
+          <dt>Installer</dt>
+          <dd><a href="https://github.com/cervantesh/windows-inertial-mouse-driver/tree/main/src/installer">src/installer</a></dd>
+        </div>
+        <div>
+          <dt>Release</dt>
+          <dd><a href="https://github.com/cervantesh/windows-inertial-mouse-driver/releases/tag/v1.0.0">v1.0.0</a></dd>
+        </div>
+      </dl>
+    </header>
+
+    <section class="paper-section">
+      <div class="section-heading">
+        <span class="section-number">01</span>
+        <h2>Abstract</h2>
+      </div>
+      <p class="lede">
+        This project implements a Windows HID mouse upper-filter driver that
+        treats incoming relative mouse movement as acceleration instead of
+        direct cursor displacement.
+      </p>
+      <p>
+        The driver keeps virtual velocity in kernel state, emits continued
+        relative movement through a KMDF timer, and applies friction until the
+        cursor settles. The surrounding repository includes the driver source,
+        registry-backed tuning defaults, build scripts, and a Windows setup
+        wizard for local test installation.
+      </p>
+    </section>
+
+    <section class="paper-section">
+      <div class="section-heading">
+        <span class="section-number">02</span>
+        <h2>Repository Structure</h2>
+      </div>
+      <dl class="branch-list">
+        <div>
+          <dt><a href="https://github.com/cervantesh/windows-inertial-mouse-driver/tree/main/src/inertialmouse">src/inertialmouse</a></dt>
+          <dd>KMDF HID mouse filter driver split into driver entry, filter connection, motion physics, and registry configuration modules.</dd>
+        </div>
+        <div>
+          <dt><a href="https://github.com/cervantesh/windows-inertial-mouse-driver/tree/main/src/installer">src/installer</a></dt>
+          <dd>.NET 10 WinForms setup wizard for selecting the target mouse, installing the filter, uninstalling it, and disabling test-signing when requested.</dd>
+        </div>
+        <div>
+          <dt><a href="https://github.com/cervantesh/windows-inertial-mouse-driver/tree/main/scripts">scripts</a></dt>
+          <dd>PowerShell build, install, uninstall, and toolchain scripts used by both developers and the bundled installer.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="paper-section">
+      <div class="section-heading">
+        <span class="section-number">03</span>
+        <h2>Implemented Scope</h2>
+      </div>
+      <ol class="plain-list">
+        <li>Attach as a HID mouse upper-filter through an INF targeted at the selected mouse hardware ID.</li>
+        <li>Convert raw relative mouse deltas into persistent X/Y virtual velocity.</li>
+        <li>Emit continued motion from a KMDF timer while friction decays the stored velocity.</li>
+        <li>Keep button events tied to physical input so clicks are not repeated during inertial motion.</li>
+        <li>Package a single-file installer with runtime detection and a traditional Windows wizard flow.</li>
+      </ol>
+    </section>
+
+    <section class="paper-section">
+      <div class="section-heading">
+        <span class="section-number">04</span>
+        <h2>Implementation Surface</h2>
+      </div>
+      <div class="catalog-grid">
+        <div>
+          <h3>Driver Core</h3>
+          <ul class="path-list">
+            <li><code>driver.c</code></li>
+            <li><code>filter.c</code></li>
+            <li><code>filter.h</code></li>
+            <li><code>inertialmouse.h</code></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Motion and Config</h3>
+          <ul class="path-list">
+            <li><code>motion.c</code></li>
+            <li><code>motion.h</code></li>
+            <li><code>config.c</code></li>
+            <li><code>config.h</code></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Installer and Build</h3>
+          <ul class="path-list">
+            <li><code>InstallerForm.cs</code></li>
+            <li><code>Program.cs</code></li>
+            <li><code>bootstrapper.cpp</code></li>
+            <li><code>build-installer.ps1</code></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="paper-section">
+      <div class="section-heading">
+        <span class="section-number">05</span>
+        <h2>Packaging Evidence</h2>
+      </div>
+      <p>
+        The installer is produced as a small native bootstrapper that embeds
+        the managed setup wizard and driver payload. It checks for the .NET 10
+        Desktop Runtime, offers assisted installation when missing, and keeps
+        PowerShell windows hidden during driver operations.
+      </p>
+      <figure class="validation-sheet" aria-label="Installer package summary">
+        <div class="validation-sheet-inner">
+          <div class="validation-sheet-head">
+            <p class="validation-figure-label">Figure 1</p>
+            <div class="validation-rule" aria-hidden="true"></div>
+            <h3 class="validation-title">Single-file installer package</h3>
+            <p class="validation-subtitle">
+              Windows setup wizard for selecting a HID mouse, installing the
+              kernel filter, registering an uninstall entry, and cleaning up
+              test-signing during uninstall.
+            </p>
+          </div>
+          <div class="validation-layout">
+            <div class="validation-main">
+              <pre class="validation-terminal">PS&gt; .\scripts\build-installer.ps1
+
+InertialMouseInstaller -&gt; publish\
+bootstrapper.cpp
+
+Single-file installer created:
+dist\InertialMouseInstaller.exe</pre>
+              <div class="validation-note">
+                <p class="validation-note-label">Safety note</p>
+                <p>
+                  This is a test-signed driver package for local experimentation.
+                  Production distribution would require the appropriate Windows
+                  driver signing and release process.
+                </p>
+              </div>
+            </div>
+            <dl class="validation-meta">
+              <div>
+                <dt>Release</dt>
+                <dd>v1.0.0</dd>
+              </div>
+              <div>
+                <dt>Installer</dt>
+                <dd>InertialMouseInstaller.exe</dd>
+              </div>
+              <div>
+                <dt>Runtime</dt>
+                <dd>.NET 10 Desktop Runtime</dd>
+              </div>
+              <div>
+                <dt>Toolchain</dt>
+                <dd>Visual Studio 2022 + WDK 26100</dd>
+              </div>
+              <div>
+                <dt>Driver model</dt>
+                <dd>KMDF HID upper-filter</dd>
+              </div>
+              <div>
+                <dt>Owner</dt>
+                <dd>CervantesH</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </figure>
+    </section>
+
+    <section class="paper-section">
+      <div class="section-heading">
+        <span class="section-number">06</span>
+        <h2>Primary Artifacts</h2>
+      </div>
+      <ol class="reference-list">
+        <li><a href="https://github.com/cervantesh/windows-inertial-mouse-driver">Project repository</a></li>
+        <li><a href="https://github.com/cervantesh/windows-inertial-mouse-driver/releases/tag/v1.0.0">Release v1.0.0</a></li>
+        <li><a href="https://github.com/cervantesh/windows-inertial-mouse-driver/blob/main/README.md">Repository README</a></li>
+        <li><a href="https://github.com/cervantesh/windows-inertial-mouse-driver/blob/main/docs/inertial-mouse-driver.md">Implementation notes</a></li>
+        <li><a href="https://github.com/cervantesh/windows-inertial-mouse-driver/tree/main/src/inertialmouse">Driver source tree</a></li>
+      </ol>
+    </section>
+  </main>
+</body>
+</html>
